@@ -4,7 +4,7 @@
 discount earns you cash or just hands margin to clients who'd pay on time anyway. It acts through
 the PayPal Invoicing v2 API only after you approve.
 
-**Live demo:** https://aryanrsinghsengar.github.io/terms-desk/ · **Video (2 min):** [`docs/video/terms-desk-demo-voiced.mp4`](docs/video/terms-desk-demo-voiced.mp4)
+**Live demo:** https://aryanrsinghsengar.github.io/terms-desk/ · **Video (1:43):** [`docs/video/terms-desk-demo-final.mp4`](docs/video/terms-desk-demo-final.mp4)
 
 > Status: hackathon build in progress (PayPal AI Hackathon, 2026). Sections marked TODO are not done yet.
 

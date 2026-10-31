@@ -1,0 +1,175 @@
+1
+00:00:00,300 --> 00:00:02,660
+Freelancers offer 2% off if you pay early
+
+2
+00:00:02,680 --> 00:00:03,690
+all the time.
+
+3
+00:00:03,940 --> 00:00:06,290
+Most never check if it actually makes them money.
+
+4
+00:00:07,317 --> 00:00:08,467
+This is Terms Desk.
+
+5
+00:00:08,977 --> 00:00:10,677
+It's an agent that sits on top of PayPal
+
+6
+00:00:10,697 --> 00:00:12,307
+Invoicing and decides,
+
+7
+00:00:12,777 --> 00:00:13,947
+invoice by invoice,
+
+8
+00:00:14,257 --> 00:00:15,977
+whether an early-payment discount earns
+
+9
+00:00:15,997 --> 00:00:18,457
+you cash, or just hands margin to clients
+
+10
+00:00:18,477 --> 00:00:20,007
+who'd pay on time anyway.
+
+11
+00:00:21,074 --> 00:00:22,164
+I press Run agent.
+
+12
+00:00:22,714 --> 00:00:24,564
+It pulls my draft invoices from PayPal,
+
+13
+00:00:24,834 --> 00:00:26,754
+scores each client's chance of paying on
+
+14
+00:00:26,774 --> 00:00:29,784
+time, and passes every proposal to the Skeptic.
+
+15
+00:00:30,882 --> 00:00:32,332
+The Skeptic is plain math,
+
+16
+00:00:32,702 --> 00:00:33,332
+not AI.
+
+17
+00:00:34,122 --> 00:00:36,972
+Lumen Labs pays on time 84% of the time,
+
+18
+00:00:37,162 --> 00:00:38,842
+so a discount would just give away about
+
+19
+00:00:38,862 --> 00:00:40,952
+$130. Blocked.
+
+20
+00:00:41,882 --> 00:00:43,692
+Northwind usually pays months late,
+
+21
+00:00:43,942 --> 00:00:45,632
+so here the discount is worth it.
+
+22
+00:00:46,624 --> 00:00:48,694
+Nothing goes out until I approve.
+
+23
+00:00:49,484 --> 00:00:52,024
+One click, and Terms Desk creates the invoice
+
+24
+00:00:52,044 --> 00:00:55,204
+through the PayPal Invoicing API with a
+
+25
+00:00:55,224 --> 00:00:57,434
+2% discount and sends it.
+
+26
+00:00:57,884 --> 00:01:00,174
+If the client misses the 10-day window,
+
+27
+00:01:00,484 --> 00:01:02,134
+the discount is removed automatically.
+
+28
+00:01:02,844 --> 00:01:04,654
+And here's the real sandbox payment:
+
+29
+00:01:04,804 --> 00:01:08,354
+$1,960, marked paid by PayPal.
+
+30
+00:01:09,602 --> 00:01:11,152
+You can test the rule yourself.
+
+31
+00:01:12,102 --> 00:01:14,672
+Northwind pays on time 29% of the time,
+
+32
+00:01:14,942 --> 00:01:16,652
+and the discount comes out positive.
+
+33
+00:01:17,222 --> 00:01:19,642
+Now raise that chance to 84%.
+
+34
+00:01:19,662 --> 00:01:21,072
+The verdict flips.
+
+35
+00:01:21,922 --> 00:01:23,602
+Even if every slow payer sped up,
+
+36
+00:01:23,622 --> 00:01:25,562
+the discount still loses money because you'd
+
+37
+00:01:25,582 --> 00:01:27,142
+mostly be paying clients who were going
+
+38
+00:01:27,162 --> 00:01:28,032
+to pay anyway.
+
+39
+00:01:29,206 --> 00:01:31,056
+Every decision lands in the ledger,
+
+40
+00:01:31,386 --> 00:01:33,176
+who decided and what it was worth.
+
+41
+00:01:33,706 --> 00:01:35,436
+Money kept, discounts paid,
+
+42
+00:01:35,506 --> 00:01:36,276
+nothing hidden.
+
+43
+00:01:37,473 --> 00:01:38,303
+Terms Desk.
+
+44
+00:01:38,733 --> 00:01:40,603
+Discounts that earn money, built on PayPal.
