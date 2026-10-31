@@ -1,0 +1,125 @@
+{
+  "rows_raw": 50000,
+  "rows_closed_usd_dedup": 41555,
+  "train_rows": 36246,
+  "test_rows": 5309,
+  "test_rows_with_history": 5261,
+  "train_ontime_rate": 0.6019,
+  "test_ontime_rate": 0.6146,
+  "share_15_day_terms": 0.8067,
+  "auc_baseline": 0.7493,
+  "auc_model": 0.8257,
+  "auc_model_no_weekday": 0.7829,
+  "brier_model_no_weekday": 0.1796,
+  "brier_baseline": 0.1875,
+  "brier_model": 0.157,
+  "auc_baseline_seen_clients": 0.75,
+  "auc_model_seen_clients": 0.8266,
+  "feature_importance": {
+    "baseline_p": 0.3434,
+    "hist_n": 0.0692,
+    "hist_mean_late": 0.1876,
+    "log_amt": 0.0443,
+    "term_days": 0.1538,
+    "dow": 0.2017
+  },
+  "test_ontime_by_history_bucket": {
+    "<50%": {
+      "n": 1464,
+      "ontime_rate": 0.2889
+    },
+    "50-90%": {
+      "n": 3614,
+      "ontime_rate": 0.7371
+    },
+    ">=90%": {
+      "n": 183,
+      "ontime_rate": 0.8415
+    }
+  },
+  "calibration_baseline_p": [
+    [
+      0.154,
+      0.144
+    ],
+    [
+      0.306,
+      0.365
+    ],
+    [
+      0.458,
+      0.462
+    ],
+    [
+      0.567,
+      0.568
+    ],
+    [
+      0.632,
+      0.676
+    ],
+    [
+      0.723,
+      0.726
+    ],
+    [
+      0.802,
+      0.805
+    ],
+    [
+      0.811,
+      0.838
+    ],
+    [
+      0.811,
+      0.754
+    ],
+    [
+      0.855,
+      0.83
+    ]
+  ],
+  "calibration_model_p": [
+    [
+      0.079,
+      0.111
+    ],
+    [
+      0.226,
+      0.168
+    ],
+    [
+      0.366,
+      0.354
+    ],
+    [
+      0.555,
+      0.597
+    ],
+    [
+      0.718,
+      0.719
+    ],
+    [
+      0.79,
+      0.772
+    ],
+    [
+      0.841,
+      0.827
+    ],
+    [
+      0.882,
+      0.822
+    ],
+    [
+      0.914,
+      0.833
+    ],
+    [
+      0.96,
+      0.944
+    ]
+  ],
+  "k3_model_beats_baseline_auc": true
+}
