@@ -2,7 +2,9 @@
 
 **Discounts are expensive money.** Terms Desk decides, per PayPal invoice, whether an early-payment
 discount earns you cash or just hands margin to clients who'd pay on time anyway. It acts through
-PayPal (Invoicing v2 conditional rules) only after you approve.
+the PayPal Invoicing v2 API only after you approve.
+
+**Live demo:** https://aryanrsinghsengar.github.io/terms-desk/ · **Video (2 min):** [`docs/video/terms-desk-demo-voiced.mp4`](docs/video/terms-desk-demo-voiced.mp4)
 
 > Status: hackathon build in progress (PayPal AI Hackathon, 2026). Sections marked TODO are not done yet.
 
@@ -10,7 +12,10 @@ PayPal (Invoicing v2 conditional rules) only after you approve.
 1. **Predict**: per-client probability of paying on time, from history a PayPal merchant already has.
 2. **Skeptic** (deterministic, not AI): expected value of a discount. Blocks any discount that loses money.
 3. **Approve**: proposals land in an approval queue; nothing is sent until you click approve.
-4. **Act**: `create_invoice` -> `create_conditional_rules_for_invoice` (EARLY_PAYMENT_DISCOUNT) -> `send_invoice`.
+4. **Act**: create the invoice with an `invoice_discount` -> `send_invoice`. Terms Desk enforces the
+   discount window itself: if the invoice is still unpaid when the window closes, it updates the invoice
+   back to full price (recomputing `amount` and `breakdown`). PayPal's native conditional-rules endpoint
+   returned `401 client_auth_mech_not_allowed` for our sandbox app, so we do not rely on it.
 5. **Ledger**: every blocked discount is logged with the money it saved.
 
 ## The Skeptic formula
@@ -47,6 +52,18 @@ On-time rate in 2020 by the client's earlier history: <50% on time before → 28
 
 *Numbers above were produced from a GitHub mirror with the identical schema; TODO re-run on the Kaggle original file.*
 
+## Verified PayPal sandbox flow
+One real end-to-end run in the PayPal **sandbox** (no real money):
+
+| Step | Result |
+|---|---|
+| Invoice | `INV2-JCP3-K2T3-VLW6-2ZE5`, $2,000.00 |
+| Discount | 2% ($40.00) inside a 10-day window |
+| Paid | $1,960.00 with a sandbox Visa, status `PAID` |
+| Transaction | `9K007555N0827933D`, `SUCCESS` |
+
+Clients shown in the UI (Northwind, Lumen Labs, ...) are fictional demo data.
+
 ## Run it
 ```bash
 cp .env.example .env    # add sandbox REST app creds
@@ -56,11 +73,12 @@ python spike/paypal_spike.py token
 ```
 
 ## How this differs
-TODO: collections bots (tidewater, owed, chaser, ...) chase late invoices. Terms Desk decides the
-*terms* before the invoice goes out, and is the only entry we found using PayPal conditional rules.
+Collections bots chase invoices after they are late. Terms Desk works earlier: it decides the
+*terms* before the invoice goes out, and refuses discounts that would only pay clients who were going
+to pay on time anyway. A human approves every invoice it sends.
 
 ## Built with
-PayPal Invoicing v2, PayPal Agent Toolkit (Python 1.11.0), XGBoost, scikit-learn, AG Grid (TODO), Gemini (TODO).
+PayPal Invoicing v2, PayPal Agent Toolkit (Python 1.11.0), XGBoost, scikit-learn, AG Grid Community, Inter, Playwright (demo recording), ElevenLabs (voiceover).
 
 ## License
 MIT
