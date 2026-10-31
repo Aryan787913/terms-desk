@@ -69,9 +69,12 @@ def decide(A, d, window_days, r, p0, days_late_pay, p_shift_assumed) -> Decision
     ev, cost, benefit = expected_value(A, d, window_days, r, p0, days_late_pay, p_shift_assumed)
     be = break_even_p_shift(d, window_days, r, p0, days_late_pay)
     g = max(days_late_pay - window_days, 0)
-    if be is None:
-        reason = (f"Blocked: even if every slow payer shifted, {d:.0%} for {g} days sooner costs more "
-                  f"than your {r:.0%} cost of capital. Expected giveaway to on-time payers ${d*A*p0:,.0f}.")
+    if be is None and r * g / 365 <= d:
+        reason = (f"Blocked: {d:.0%} for {g} days sooner costs more than your {r:.0%} cost of capital, "
+                  f"whoever pays early. Expected giveaway to on-time payers ${d*A*p0:,.0f}.")
+    elif be is None:
+        reason = (f"Blocked: even if every slow payer sped up, the early cash would not cover the "
+                  f"${d*A*p0:,.0f} you'd give to clients who pay on time anyway.")
     elif ev >= 0:
         reason = (f"Approved: EV +${ev:,.0f}. Pays off if at least {be:.0%} of slow payers move "
                   f"into the {window_days}-day window (you assumed {p_shift_assumed:.0%}).")

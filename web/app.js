@@ -27,7 +27,8 @@ function decide(A, d, w, r, p0, late, s) {
   const be = breakEven(d, w, r, p0, late);
   const give = d * A * p0;
   let reason;
-  if (be === null) reason = `Blocked: even if every slow payer sped up, ${pct(d)} for ${g} days sooner costs more than your ${pct(r)} cost of capital. Expected giveaway to on-time payers ${usd(give)}.`;
+  if (be === null && r * g / 365 <= d) reason = `Blocked: ${pct(d)} for ${g} days sooner costs more than your ${pct(r)} cost of capital, whoever pays early. Expected giveaway to on-time payers ${usd(give)}.`;
+  else if (be === null) reason = `Blocked: even if every slow payer sped up, the early cash would not cover the ${usd(give)} you'd give to clients who pay on time anyway.`;
   else if (ev >= 0) reason = `Approved: pays off if at least ${pct(be)} of slow payers move into the ${w}-day window (you assumed ${pct(s)}).`;
   else reason = `Blocked: needs ${pct(be)} of slow payers to speed up; you assumed ${pct(s)}. Expected giveaway ${usd(give)}.`;
   return { approve: ev >= 0 && be !== null, ev, cost, benefit, be, give, g, reason };
