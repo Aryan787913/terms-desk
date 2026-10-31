@@ -6,3 +6,7 @@ data/*.csv
 node_modules/
 docs/video/raw.webm
 ledger.jsonl
+.env.*
+!.env.example
+*.pem
+*.key
