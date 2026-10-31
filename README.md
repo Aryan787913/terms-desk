@@ -15,7 +15,9 @@ the PayPal Invoicing v2 API only after you approve.
 4. **Act**: create the invoice with an `invoice_discount` -> `send_invoice`. Terms Desk enforces the
    discount window itself: if the invoice is still unpaid when the window closes, it updates the invoice
    back to full price (recomputing `amount` and `breakdown`). PayPal's native conditional-rules endpoint
-   returned `401 client_auth_mech_not_allowed` for our sandbox app, so we do not rely on it.
+   returned `401 client_auth_mech_not_allowed` for our sandbox app (its write calls also list the
+   `invoicing/internal` scope). Setting `detail.payment_term.conditional_rules.early_payment_discount`
+   directly on create or update was accepted but silently dropped (tested 2026-10-31), so we do not rely on it.
 5. **Ledger**: every blocked discount is logged with the money it saved.
 
 ## The Skeptic formula
