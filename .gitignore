@@ -4,3 +4,4 @@ __pycache__/
 data/*.csv
 .venv/
 node_modules/
+docs/video/raw.webm

@@ -1,0 +1,19 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="vendor/inter.css"><style>
+html,body{margin:0;height:100%;font-family:Inter,sans-serif;-webkit-font-smoothing:antialiased}
+body{display:grid;place-items:center;color:#fff;background:radial-gradient(110% 120% at 85% 0%,#0B5BD3 0%,#003087 45%,#00143F 100%);overflow:hidden}
+.w{text-align:center;max-width:1100px;padding:0 40px}
+.logo{width:84px;height:84px;margin:0 auto 26px}
+.k{font-size:20px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#7FDBFF;opacity:0;animation:in .8s .2s forwards}
+h1{font-size:84px;letter-spacing:-.045em;margin:14px 0 18px;font-weight:800;opacity:0;animation:in .8s .5s forwards}
+p{font-size:30px;line-height:1.4;opacity:0;color:#D6E4FF;animation:in .8s .9s forwards;margin:0}
+.f{margin-top:40px;font-size:18px;color:#9DB4E0;opacity:0;animation:in .8s 1.4s forwards}
+.glow{position:absolute;right:-160px;top:-160px;width:560px;height:560px;border-radius:50%;background:radial-gradient(circle,rgba(0,209,255,.35),transparent 65%)}
+@keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+</style></head><body><div class="glow"></div><div class="w" id="w"></div>
+<script>
+const q=new URLSearchParams(location.search);const m=q.get("m")||"start";
+const logo='<svg class="logo" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#fff"/><path d="M9 11h14M16 11v12" stroke="#0070E0" stroke-width="3.2" stroke-linecap="round"/></svg>';
+document.getElementById("w").innerHTML = m==="start"
+ ? logo+'<div class="k">PayPal AI Hackathon · 2026</div><h1>Terms Desk</h1><p>Should this invoice get an early-payment discount?<br>An agent that only says yes when the math does.</p>'
+ : logo+'<div class="k">Built on PayPal Invoicing v2</div><h1>Discounts that earn money.</h1><p>Predict · Skeptic · You approve · PayPal acts</p><div class="f">github.com/aryanrsinghsengar/terms-desk</div>';
+</script></body></html>

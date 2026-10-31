@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Terms Desk · Smarter PayPal invoice terms</title>
+<meta name="description" content="Terms Desk decides, per PayPal invoice, whether an early-payment discount earns cash or just gives away margin. Nothing is sent until you approve." />
+<link rel="stylesheet" href="vendor/inter.css" />
+<link rel="stylesheet" href="vendor/ag-grid.css" />
+<link rel="stylesheet" href="vendor/ag-theme-quartz.css" />
+<link rel="stylesheet" href="styles.css" />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23003087'/%3E%3Cpath d='M9 11h14M16 11v12' stroke='%2300D1FF' stroke-width='3.2' stroke-linecap='round'/%3E%3C/svg%3E" />
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#003087"/><path d="M9 11h14M16 11v12" stroke="#00D1FF" stroke-width="3.2" stroke-linecap="round"/></svg></div>
+      <div><div class="brand-name">Terms Desk</div><div class="brand-sub">for PayPal Invoicing</div></div>
+    </div>
+    <nav>
+      <a data-view="overview" class="active"><span class="ico">◧</span>Overview</a>
+      <a data-view="queue"><span class="ico">✓</span>Approval queue <span class="badge" id="queueBadge">0</span></a>
+      <a data-view="skeptic"><span class="ico">∑</span>The Skeptic</a>
+      <a data-view="ledger"><span class="ico">≡</span>Money ledger</a>
+    </nav>
+    <div class="side-card">
+      <div class="side-card-title">How it decides</div>
+      <ol class="mini-steps">
+        <li><b>Predict</b> on-time odds per client</li>
+        <li><b>Skeptic</b> checks the math</li>
+        <li><b>You</b> approve or reject</li>
+        <li><b>PayPal</b> sends the invoice</li>
+      </ol>
+    </div>
+    <div class="conn"><span class="dot"></span>PayPal Sandbox · connected<div class="conn-sub">Invoicing v2 · US business</div></div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div>
+        <div class="crumb" id="crumb">Workspace</div>
+        <h1 id="title">Good afternoon</h1>
+      </div>
+      <div class="top-actions">
+        <span class="chip chip-demo" title="Clients are fictional. The Northwind invoice is a real PayPal sandbox transaction.">Demo data · Sandbox</span>
+        <button class="btn btn-primary" id="runAgent"><span class="spark">✦</span> Run agent</button>
+      </div>
+    </header>
+
+    <!-- OVERVIEW -->
+    <section class="view active" id="view-overview">
+      <div class="grid-hero">
+        <div class="hero-card">
+          <div class="hero-label">Margin protected this month</div>
+          <div class="hero-value" id="heroProtected">$0</div>
+          <div class="hero-sub">Discounts the Skeptic blocked because those clients pay on time anyway.</div>
+          <div class="hero-row">
+            <div><div class="hr-k">Early cash captured</div><div class="hr-v" id="heroCaptured">$0</div></div>
+            <div><div class="hr-k">Avg. days sooner</div><div class="hr-v" id="heroDays">0</div></div>
+            <div><div class="hr-k">Sent via PayPal</div><div class="hr-v" id="heroSent">0</div></div>
+          </div>
+          <div class="hero-glow"></div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="kpi-k">Waiting for you</div><div class="kpi-v" id="kpiPending">0</div><div class="kpi-s">proposals in queue</div></div>
+          <div class="kpi"><div class="kpi-k">Discounts blocked</div><div class="kpi-v" id="kpiBlocked">0</div><div class="kpi-s">would have lost money</div></div>
+          <div class="kpi"><div class="kpi-k">Your cost of capital</div><div class="kpi-v" id="kpiRate">36%</div><div class="kpi-s">used by the Skeptic</div></div>
+          <div class="kpi"><div class="kpi-k">Auto-sent without you</div><div class="kpi-v">0</div><div class="kpi-s">always human-approved</div></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-head"><div><div class="card-title">Is a 2% discount worth it?</div><div class="card-sub">Value of getting paid sooner vs what the discount costs, per open invoice</div></div>
+            <div class="legend"><span><i class="lg lg-a"></i>Value of early cash</span><span><i class="lg lg-b"></i>Discount cost</span></div></div>
+          <svg id="cashChart" class="chart" viewBox="0 0 640 240" preserveAspectRatio="none"></svg>
+        </div>
+        <div class="card">
+          <div class="card-head"><div><div class="card-title">Agent activity</div><div class="card-sub">Every action is logged</div></div></div>
+          <ul class="feed" id="feed"></ul>
+        </div>
+      </div>
+      <p class="foot">Clients shown are fictional; the Northwind invoice is a real PayPal sandbox payment (no real money).</p>
+    </section>
+
+    <!-- QUEUE -->
+    <section class="view" id="view-queue">
+      <div class="queue-intro">
+        <div><div class="card-title">Proposals waiting for your approval</div>
+        <div class="card-sub">The agent drafts terms. The Skeptic checks the math. Nothing reaches a client until you approve.</div></div>
+        <div class="seg" id="queueFilter"><button class="on" data-f="all">All</button><button data-f="approve">Recommended</button><button data-f="block">Blocked</button></div>
+      </div>
+      <div id="queueList" class="queue-list"></div>
+      <div id="queueEmpty" class="empty hidden"><div class="empty-ico">✓</div><div class="card-title">Queue clear</div><div class="card-sub">Press <b>Run agent</b> to scan new invoices.</div></div>
+    </section>
+
+    <!-- SKEPTIC -->
+    <section class="view" id="view-skeptic">
+      <div class="grid-sk">
+        <div class="card">
+          <div class="card-title">Try the Skeptic</div>
+          <div class="card-sub">Deterministic math, not AI. Move a slider and watch the verdict.</div>
+          <div class="sliders" id="sliders"></div>
+        </div>
+        <div class="card sk-result">
+          <div class="verdict" id="skVerdict"></div>
+          <div class="ev-big" id="skEV"></div>
+          <div class="sk-reason" id="skReason"></div>
+          <svg id="skChart" class="chart" viewBox="0 0 560 220" preserveAspectRatio="none"></svg>
+          <div class="sk-axis"><span>0% of slow payers speed up</span><span>100%</span></div>
+          <div class="sk-facts">
+            <div><div class="hr-k">Break-even shift</div><div class="sf-v" id="skBE"></div></div>
+            <div><div class="hr-k">Given to on-time payers</div><div class="sf-v" id="skGive"></div></div>
+            <div><div class="hr-k">Discount, annualized</div><div class="sf-v" id="skAnn"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="formula card">
+        <div class="card-title">The rule</div>
+        <code>EV = (1 − p₀)·s·A·r·(days gained)/365 − d·A·(p₀ + (1 − p₀)·s)</code>
+        <div class="card-sub">Approve only if EV ≥ 0 at your assumption for <i>s</i>. If r × days gained / 365 ≤ d, no response rate can make the discount pay, so it is blocked outright.</div>
+      </div>
+    </section>
+
+    <!-- LEDGER -->
+    <section class="view" id="view-ledger">
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">Money ledger</div><div class="card-sub">Every decision, who made it, and what it was worth</div></div>
+          <div class="ledger-total">Protected <b id="ledgerProtected">$0</b></div></div>
+        <div id="grid" class="ag-theme-quartz grid-box"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- APPROVAL MODAL -->
+<div class="modal-bg hidden" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="crumb">Sending through PayPal Invoicing v2</div><div class="modal-title" id="mTitle"></div></div>
+      <button class="x" id="mClose">×</button>
+    </div>
+    <div class="inv-preview">
+      <div class="ip-row"><span>Invoice amount</span><b id="mAmt"></b></div>
+      <div class="ip-row"><span id="mDiscLabel">Early-pay discount</span><b class="neg" id="mDisc"></b></div>
+      <div class="ip-row total"><span>Client pays if early</span><b id="mPay"></b></div>
+      <div class="ip-note" id="mNote"></div>
+    </div>
+    <ol class="steps" id="mSteps"></ol>
+    <div class="paid hidden" id="mPaid">
+      <div class="paid-ico">✓</div>
+      <div><div class="paid-t">Paid in PayPal</div><div class="paid-s" id="mPaidSub"></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" id="mDone">Done</button></div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+<script src="vendor/ag-grid-community.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
