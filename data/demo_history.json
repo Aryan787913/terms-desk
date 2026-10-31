@@ -1,0 +1,15 @@
+{
+  "_note": "FICTIONAL demo clients. days_to_pay = days from invoice date to payment for past invoices.",
+  "clients": [
+    {"name": "Northwind Design Co.", "email": "ap@northwind-demo.example.com", "amount": 2000, "item": "Retainer (Net 30)",
+     "days_to_pay": [6, 9, 88, 95, 84, 97, 86]},
+    {"name": "Lumen Labs", "email": "billing@lumenlabs-demo.example.com", "amount": 8000, "item": "Product sprint (Net 30)",
+     "days_to_pay": [4, 7, 8, 5, 9, 6, 10, 3, 8, 7, 9, 24, 26]},
+    {"name": "Kite & Co.", "email": "pay@kiteco-demo.example.com", "amount": 1200, "item": "Brand refresh (Net 30)",
+     "days_to_pay": [5, 8, 10, 66, 72, 70, 68, 74, 70]},
+    {"name": "Orbit Media", "email": "finance@orbitmedia-demo.example.com", "amount": 4500, "item": "Monthly content (Net 30)",
+     "days_to_pay": [6, 8, 9, 5, 7, 10, 9, 8, 38, 41, 41]},
+    {"name": "Fernhill Studio", "email": "ap@fernhill-demo.example.com", "amount": 3200, "item": "UX audit (Net 30)",
+     "days_to_pay": [3, 5, 6, 8, 4, 9, 7, 6, 5, 10, 20]}
+  ]
+}

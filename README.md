@@ -64,13 +64,38 @@ One real end-to-end run in the PayPal **sandbox** (no real money):
 
 Clients shown in the UI (Northwind, Lumen Labs, ...) are fictional demo data.
 
-## Run it
+## Run it (judges: about 5 minutes)
+The agent itself uses only the Python standard library, and talks to the **PayPal sandbox only**
+(it refuses `PAYPAL_ENV=live`).
+
 ```bash
-cp .env.example .env    # add sandbox REST app creds
-pip install -r requirements.txt
-pytest -q
-python spike/paypal_spike.py token
+git clone https://github.com/aryanrsinghsengar/terms-desk && cd terms-desk
+cp .env.example .env          # paste a PayPal *sandbox* REST app Client ID + Secret
+python -m terms_desk.agent seed      # creates 5 fictional demo DRAFT invoices in your sandbox
+python -m terms_desk.agent run       # scores each client, runs the Skeptic, asks you y/N, then acts
+python -m terms_desk.agent enforce --today 2099-01-01   # demo: discount window over, unpaid -> full price
+python -m terms_desk.agent ledger    # every decision and what it was worth
 ```
+
+What `run` does per draft invoice:
+1. Pulls it from PayPal Invoicing v2 and matches the recipient to the client's payment history
+   (`data/demo_history.json`, fictional).
+2. Model: probability the client pays inside the window anyway, plus expected days to pay otherwise.
+3. Skeptic: approves the discount only if expected value is positive, and prints why.
+4. Asks you. On `y` it updates the draft with a 2% `invoice_discount` and a dated note, then sends it.
+   Blocked discounts can still be sent at full price. Nothing is sent without your `y`.
+
+`enforce` is meant to run daily (cron). After the window, any unpaid Terms Desk invoice is updated back
+to full price; PayPal recomputes the amount from the items, so no stale total is ever sent.
+Verified in sandbox on 2026-10-31: a SENT $1,960.00 invoice was restored to $2,000.00 and stayed `SENT`.
+
+Tests (offline, no PayPal calls): `pip install pytest && pytest -q`.
+Settings (optional, in `.env`): `DISCOUNT=0.02`, `WINDOW_DAYS=10`, `COST_OF_CAPITAL=0.36`, `P_SHIFT=0.5`.
+
+The web UI in `web/` is the judge-friendly walkthrough of the same flow (live link above). Its client
+data is fictional and its PayPal steps replay the verified sandbox run.
+
+The ML backtest (`ml/backtest.py`) needs `pip install -r requirements.txt` and the Kaggle CSV.
 
 ## How this differs
 Collections bots chase invoices after they are late. Terms Desk works earlier: it decides the
