@@ -99,24 +99,40 @@ data is fictional and its PayPal steps replay the verified sandbox run.
 
 The ML backtest (`ml/backtest.py`) needs `pip install -r requirements.txt` and the Kaggle CSV.
 
-## Otari: plain-English explanations (Mozilla Otari hackathon branch)
-On branch `otari`, every Skeptic decision also gets a two-sentence explanation written by an LLM
-routed through [Otari](https://otari.ai), Mozilla.ai's hosted AI gateway (OpenAI-compatible,
-`https://otari.ai/api/v1`), currently with the open-weight GPT OSS 120B served via Groq. Code: `terms_desk/explain.py`, standard library only.
+## Otari AI layer (Mozilla Otari hackathon, branch `otari`)
+Every AI call in Terms Desk goes through [Otari](https://otari.ai), Mozilla.ai's hosted AI gateway
+(OpenAI-compatible, `https://otari.ai/api/v1`). **The LLMs never decide**: the Skeptic has already approved or
+blocked each discount. Open-weight models then do separate jobs:
 
-- **The LLM never decides.** The Skeptic has already approved or blocked; the model only explains.
-- **Grounding check.** The model gets only the numbers the Skeptic computed. Any reply with a number
-  not in those facts, or one that contradicts the verdict, is discarded and a deterministic template is used.
-- **Never blocks.** No token, a timeout, or an HTTP error falls back to the template.
-- Swap models by changing `OTARI_MODEL`; budgets and usage show up in the Otari dashboard.
+| Role | Model via Otari (open weights) | Job |
+|---|---|---|
+| Explainer | `groq:openai/gpt-oss-120b` -> fallback `gpt-oss-20b` | two plain sentences for the merchant |
+| Writer | `groq:openai/gpt-oss-20b` -> fallback `gpt-oss-120b` | the client-facing invoice note (approved discounts only) |
+| Guard | `groq:openai/gpt-oss-safeguard-20b` | safety model screens every client note against a written policy (no threats, invented fees, wrong amounts) before a human sees it; fails closed |
+| Verifier (opt-in) | `groq:openai/gpt-oss-120b` + `otari_code_execution` | re-derives the EV in Otari's code sandbox; a mismatch with the Skeptic is flagged |
+
+Otari features used (`terms_desk/otari.py`, `terms_desk/explain.py`):
+- **Multiple open-weight models in distinct roles** (table above).
+- **Model routing and fallbacks**: each role has an ordered model chain; a model that errors (404, 5xx, rate limit,
+  empty reply) is skipped and the skip is printed. A role's model can also be an Otari **routing policy** name
+  (Routing -> Policies), e.g. `OTARI_EXPLAIN_MODELS=terms-desk-explainer`.
+- **Guardrails**: the guard model, plus code-level grounding (any number not computed by the Skeptic, or a flipped
+  verdict, is rejected) and deterministic templates on any failure.
+- **Budgets / per-client budgets**: every request is tagged with its end client; with an Otari service key and
+  `OTARI_PER_CLIENT_BUDGETS=1` it is sent as `user`, so Otari caps spend per client. Budget exhaustion (402/429)
+  stops the chain and falls back to templates instead of crashing.
+- **Code execution**: `--verify` (needs Otari balance for the sandbox).
 
 ```bash
-# in .env: OTARI_API_KEY=otk_...   OTARI_MODEL=groq:openai/gpt-oss-120b
-python -m terms_desk.agent explain          # no PayPal needed: 5 demo clients, Skeptic + Otari
-python -m terms_desk.agent explain --no-llm # template only
-python -m terms_desk.agent run              # the full PayPal sandbox flow now prints the explanation too
+# .env: OTARI_API_KEY=otk_...   (models above are the defaults; override with OTARI_EXPLAIN_MODELS etc.)
+python -m terms_desk.agent explain                 # no PayPal needed: 5 demo clients through the full AI layer
+python -m terms_desk.agent explain --guard-demo    # also shows the guard blocking a threatening note
+python -m terms_desk.agent explain --verify        # also re-derives each EV with Otari code execution
+OTARI_EXPLAIN_MODELS="groq:llama-3.3-70b-versatile,groq:openai/gpt-oss-120b" python -m terms_desk.agent explain  # fallback demo
+python -m terms_desk.agent run                     # full PayPal sandbox flow, AI invoice note included
 ```
-Tests: `tests/test_explain.py` (offline, the Otari call is mocked).
+Tests: `tests/test_explain.py` (offline, Otari mocked): grounding, verdict flips, fallback chain, budget stop,
+guard block/pass.
 
 ## How this differs
 Collections bots chase invoices after they are late. Terms Desk works earlier: it decides the

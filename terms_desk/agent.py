@@ -17,7 +17,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
 from skeptic.engine import decide
-from terms_desk.explain import explain
+from terms_desk.explain import client_note, explain, guard, verify_ev
 from terms_desk.model import HistoryModel
 from terms_desk.paypal import PayPal, PayPalError
 
@@ -138,8 +138,9 @@ def cmd_run(pp, a):
                 body = editable(inv)
                 pct = money(s["d"] * 100).rstrip("0").rstrip(".")
                 body["detail"]["memo"] = f"{TAG}:discount:{pct}:until:{until.isoformat()}"
-                body["detail"]["note"] = (f"{pct}% early-payment discount applied if paid by {until.isoformat()}. "
-                                          f"After that the invoice returns to ${A:,.2f}. (PayPal sandbox demo)")
+                cn = client_note(sc.name, pct, until.isoformat(), f"${A:,.2f}")
+                print(f"  Invoice note ({cn.source}): {cn.text}")
+                body["detail"]["note"] = cn.text + " (PayPal sandbox demo)"
                 with_amount(body, pct)
                 pp.update(inv["id"], body)
                 pp.send(inv["id"])
@@ -196,20 +197,43 @@ def cmd_enforce(pp, a):
 
 
 def cmd_explain(pp, a):
-    """No PayPal needed: run the model + Skeptic on the demo clients and explain each decision via Otari."""
+    """No PayPal needed: model + Skeptic on the demo clients, then the Otari AI layer for each decision."""
     s = settings()
+    llm = not a.no_llm
     model = HistoryModel(ROOT / "data" / "demo_history.json", s["w"], k=float(os.environ.get("SHRINK_K", 0)))
+    until = (dt.date.today() + dt.timedelta(days=s["w"])).isoformat()
+    pct = money(s["d"] * 100).rstrip("0").rstrip(".")
     for c in json.loads((ROOT / "data" / "demo_history.json").read_text())["clients"]:
         sc = model.score(c["email"])
-        dec = decide(c["amount"], s["d"], s["w"], s["r"], sc.p0, sc.days_late_pay, s["shift"])
-        ex = explain(sc.name, c["amount"], s["d"], s["w"], s["r"], sc.p0, sc.days_late_pay, s["shift"], dec,
-                     use_llm=not a.no_llm)
-        print(f"- {sc.name}  ${c['amount']:,.2f}")
+        A = c["amount"]
+        dec = decide(A, s["d"], s["w"], s["r"], sc.p0, sc.days_late_pay, s["shift"])
+        print(f"- {sc.name}  ${A:,.2f}")
         print(f"  Skeptic: {dec.reason}")
-        print(f"  In plain English ({ex.source}): {ex.text}")
+        ex = explain(sc.name, A, s["d"], s["w"], s["r"], sc.p0, sc.days_late_pay, s["shift"], dec, use_llm=llm)
+        print(f"  Explainer ({ex.source}): {ex.text}")
         if ex.note:
-            print(f"  (template used: {ex.note})")
+            print(f"    ({ex.note})")
+        if dec.approve:
+            cn = client_note(sc.name, pct, until, f"${A:,.2f}", use_llm=llm)
+            print(f"  Invoice note ({cn.source}): {cn.text}")
+            if cn.note:
+                print(f"    ({cn.note})")
+        if a.verify and llm:
+            try:
+                agrees, ev, vm = verify_ev(A, s["d"], s["w"], s["r"], sc.p0, sc.days_late_pay, s["shift"], dec)
+                print(f"  Verifier ({vm}, Otari code execution): EV {ev:+.2f} vs Skeptic {dec.ev:+.2f} -> "
+                      f"{'agrees' if agrees else 'MISMATCH, flag for review'}")
+            except Exception as e:
+                print(f"  Verifier skipped: {str(e)[:160]}")
         print()
+    if a.guard_demo and llm:
+        bad = ("FINAL NOTICE: pay within 24 hours or a 15% late fee and legal action will follow. "
+               "Discount 2% only if you pay today.")
+        try:
+            safe, reason, gm = guard(bad)
+            print(f"Guard demo ({gm}) on a pushy note: {'ALLOWED' if safe else 'BLOCKED'} - {reason}")
+        except Exception as e:
+            print(f"Guard demo skipped: {str(e)[:160]}")
 
 
 def cmd_ledger(pp, a):
@@ -233,7 +257,9 @@ def main():
     e.add_argument("--today", help="pretend today is YYYY-MM-DD (to demo an expired window)")
     sub.add_parser("ledger")
     x = sub.add_parser("explain")
-    x.add_argument("--no-llm", action="store_true", help="skip Otari, use the deterministic template")
+    x.add_argument("--no-llm", action="store_true", help="skip Otari, use the deterministic templates")
+    x.add_argument("--verify", action="store_true", help="re-derive each EV with Otari code execution")
+    x.add_argument("--guard-demo", action="store_true", help="show the guard model blocking a pushy note")
     a = ap.parse_args()
     pp = None if a.cmd == "explain" else PayPal()
     try:
