@@ -4,6 +4,7 @@
   python -m terms_desk.agent run               # score drafts, run the Skeptic, ask you, then act
   python -m terms_desk.agent enforce           # remove expired early-pay discounts from unpaid invoices
   python -m terms_desk.agent ledger            # every decision and what it was worth
+  python -m terms_desk.agent explain           # offline: Skeptic + Otari explanation for each demo client
 
 Flow for an approved discount (PayPal's native conditional-rules endpoint is not used; see README):
   1. update the draft with invoice_discount percent + a note with the deadline
@@ -16,6 +17,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
 
 from skeptic.engine import decide
+from terms_desk.explain import explain
 from terms_desk.model import HistoryModel
 from terms_desk.paypal import PayPal, PayPalError
 
@@ -127,6 +129,8 @@ def cmd_run(pp, a):
         print(f"- {inv['id']}  {sc.name}  ${A:,.2f}")
         print(f"  Model: {sc.p0:.0%} chance of paying inside {s['w']} days ({sc.history_text}).")
         print(f"  Skeptic: {dec.reason}")
+        ex = explain(sc.name, A, s["d"], s["w"], s["r"], sc.p0, sc.days_late_pay, s["shift"], dec)
+        print(f"  In plain English ({ex.source}): {ex.text}")
         auto = True if inv["id"] in approve_ids else False if inv["id"] in reject_ids else None
         if dec.approve:
             if ask(f"  Send with {s['d']:.0%} off for {s['w']} days?", auto):
@@ -191,6 +195,23 @@ def cmd_enforce(pp, a):
     print(f"Done. {n} invoice(s) restored to full price.")
 
 
+def cmd_explain(pp, a):
+    """No PayPal needed: run the model + Skeptic on the demo clients and explain each decision via Otari."""
+    s = settings()
+    model = HistoryModel(ROOT / "data" / "demo_history.json", s["w"], k=float(os.environ.get("SHRINK_K", 0)))
+    for c in json.loads((ROOT / "data" / "demo_history.json").read_text())["clients"]:
+        sc = model.score(c["email"])
+        dec = decide(c["amount"], s["d"], s["w"], s["r"], sc.p0, sc.days_late_pay, s["shift"])
+        ex = explain(sc.name, c["amount"], s["d"], s["w"], s["r"], sc.p0, sc.days_late_pay, s["shift"], dec,
+                     use_llm=not a.no_llm)
+        print(f"- {sc.name}  ${c['amount']:,.2f}")
+        print(f"  Skeptic: {dec.reason}")
+        print(f"  In plain English ({ex.source}): {ex.text}")
+        if ex.note:
+            print(f"  (template used: {ex.note})")
+        print()
+
+
 def cmd_ledger(pp, a):
     if not LEDGER.exists():
         print("Ledger is empty."); return
@@ -211,10 +232,13 @@ def main():
     e = sub.add_parser("enforce")
     e.add_argument("--today", help="pretend today is YYYY-MM-DD (to demo an expired window)")
     sub.add_parser("ledger")
+    x = sub.add_parser("explain")
+    x.add_argument("--no-llm", action="store_true", help="skip Otari, use the deterministic template")
     a = ap.parse_args()
-    pp = PayPal()
+    pp = None if a.cmd == "explain" else PayPal()
     try:
-        {"seed": cmd_seed, "run": cmd_run, "enforce": cmd_enforce, "ledger": cmd_ledger}[a.cmd](pp, a)
+        {"seed": cmd_seed, "run": cmd_run, "enforce": cmd_enforce, "ledger": cmd_ledger,
+         "explain": cmd_explain}[a.cmd](pp, a)
     except PayPalError as err:
         sys.exit(f"{err}\n{json.dumps(err.body, indent=2)[:1500]}")
 

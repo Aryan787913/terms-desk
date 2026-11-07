@@ -99,13 +99,32 @@ data is fictional and its PayPal steps replay the verified sandbox run.
 
 The ML backtest (`ml/backtest.py`) needs `pip install -r requirements.txt` and the Kaggle CSV.
 
+## Otari: plain-English explanations (Mozilla Otari hackathon branch)
+On branch `otari`, every Skeptic decision also gets a two-sentence explanation written by an LLM
+routed through [Otari](https://otari.ai), Mozilla.ai's hosted AI gateway (OpenAI-compatible,
+`https://api.otari.ai/api/v1`). Code: `terms_desk/explain.py`, standard library only.
+
+- **The LLM never decides.** The Skeptic has already approved or blocked; the model only explains.
+- **Grounding check.** The model gets only the numbers the Skeptic computed. Any reply with a number
+  not in those facts, or one that contradicts the verdict, is discarded and a deterministic template is used.
+- **Never blocks.** No token, a timeout, or an HTTP error falls back to the template.
+- Swap models by changing `OTARI_MODEL`; budgets and usage show up in the Otari dashboard.
+
+```bash
+# in .env: OTARI_API_KEY=otk_...   OTARI_MODEL=<a model switched on in your Otari workspace>
+python -m terms_desk.agent explain          # no PayPal needed: 5 demo clients, Skeptic + Otari
+python -m terms_desk.agent explain --no-llm # template only
+python -m terms_desk.agent run              # the full PayPal sandbox flow now prints the explanation too
+```
+Tests: `tests/test_explain.py` (offline, the Otari call is mocked).
+
 ## How this differs
 Collections bots chase invoices after they are late. Terms Desk works earlier: it decides the
 *terms* before the invoice goes out, and refuses discounts that would only pay clients who were going
 to pay on time anyway. A human approves every invoice it sends.
 
 ## Built with
-PayPal Invoicing v2, PayPal Agent Toolkit (Python 1.11.0), XGBoost, scikit-learn, AG Grid Community, Inter, Playwright (demo recording), ElevenLabs (voiceover).
+Otari (Mozilla.ai AI gateway, `otari` branch), PayPal Invoicing v2, PayPal Agent Toolkit (Python 1.11.0), XGBoost, scikit-learn, AG Grid Community, Inter, Playwright (demo recording), ElevenLabs (voiceover).
 
 ## License
 MIT
