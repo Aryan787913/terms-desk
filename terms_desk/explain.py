@@ -92,7 +92,7 @@ def call_otari(f, timeout=20):
     if not key or not model:
         raise RuntimeError("OTARI_API_KEY / OTARI_MODEL not set")
     base = os.environ.get("OTARI_API_BASE", DEFAULT_BASE).rstrip("/")
-    body = {"model": model, "temperature": 0.2, "max_tokens": 160,
+    body = {"model": model, "temperature": 0.2, "max_tokens": 1000, "reasoning_effort": "low",
             "messages": [{"role": "system", "content": SYSTEM},
                          {"role": "user", "content": "FACTS:\n" + json.dumps(f, indent=1)}]}
     req = urllib.request.Request(f"{base}/chat/completions", data=json.dumps(body).encode(), method="POST",
@@ -102,7 +102,7 @@ def call_otari(f, timeout=20):
             out = json.loads(resp.read())
     except urllib.error.HTTPError as e:
         raise RuntimeError(f"Otari HTTP {e.code}: {e.read()[:200].decode(errors='replace')}") from None
-    return out["choices"][0]["message"]["content"].strip(), model
+    return (out["choices"][0]["message"].get("content") or "").strip(), model
 
 
 def explain(client, A, d, w, r, p0, days_late, shift, dec, use_llm=True) -> Explanation:
@@ -113,6 +113,8 @@ def explain(client, A, d, w, r, p0, days_late, shift, dec, use_llm=True) -> Expl
         text, model = call_otari(f)
     except Exception as e:  # network, auth, missing key: never block the agent on AI
         return Explanation(template(f), "template", str(e)[:160])
+    if not text:
+        return Explanation(template(f), "template", "Otari reply was empty")
     ok, why = grounded(text, f)
     if not ok:
         return Explanation(template(f), "template", f"Otari reply rejected ({why})")
