@@ -106,7 +106,7 @@ blocked each discount. Open-weight models then do separate jobs:
 
 | Role | Model via Otari (open weights) | Job |
 |---|---|---|
-| Explainer | `groq:openai/gpt-oss-120b` -> fallback `gpt-oss-20b` | two plain sentences for the merchant |
+| Explainer | Otari routing policy `terms-desk-explainer` (`groq:openai/gpt-oss-120b`, fallback `gpt-oss-20b`), then the same models directly | two plain sentences for the merchant |
 | Writer | `groq:openai/gpt-oss-20b` -> fallback `gpt-oss-120b` | the client-facing invoice note (approved discounts only) |
 | Guard | `groq:openai/gpt-oss-safeguard-20b` | safety model screens every client note against a written policy (no threats, invented fees, wrong amounts) before a human sees it; fails closed |
 | Verifier (opt-in) | `groq:openai/gpt-oss-120b` + `otari_code_execution` | re-derives the EV in Otari's code sandbox; a mismatch with the Skeptic is flagged |
@@ -115,7 +115,12 @@ Otari features used (`terms_desk/otari.py`, `terms_desk/explain.py`):
 - **Multiple open-weight models in distinct roles** (table above).
 - **Model routing and fallbacks**: each role has an ordered model chain; a model that errors (404, 5xx, rate limit,
   empty reply) is skipped and the skip is printed. A role's model can also be an Otari **routing policy** name
-  (Routing -> Policies), e.g. `OTARI_EXPLAIN_MODELS=terms-desk-explainer`.
+  (Routing -> Policies). The explainer calls the policy `terms-desk-explainer` first and prints which model served it
+  (`Otari-Model` / `Otari-Fallback` headers); without that policy in your workspace it 404s and the app falls through
+  to the direct model names.
+- **Budgets**: the workspace runs under an Otari spend ceiling (`terms-desk-ceiling`, $1/day budget); when it is
+  exhausted Otari refuses, and the app keeps working on templates.
+- **Web fetch / search**: enabled on the workspace; not used by the app yet.
 - **Guardrails**: the guard model, plus code-level grounding (any number not computed by the Skeptic, or a flipped
   verdict, is rejected) and deterministic templates on any failure.
 - **Budgets / per-client budgets**: every request is tagged with its end client; with an Otari service key and

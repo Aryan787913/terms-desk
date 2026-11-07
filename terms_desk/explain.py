@@ -3,7 +3,7 @@
 The Skeptic (skeptic/engine.py) has already approved or blocked each discount. Open-weight models served
 through Otari then do three separate jobs, each with its own model and fallback chain:
 
-  1. EXPLAINER  (default groq:openai/gpt-oss-120b -> gpt-oss-20b)   two plain sentences for the merchant
+  1. EXPLAINER  (Otari routing policy terms-desk-explainer: gpt-oss-120b -> gpt-oss-20b) two sentences for the merchant
   2. WRITER     (default groq:openai/gpt-oss-20b  -> gpt-oss-120b)  the client-facing invoice note, approved
                                                                      discounts only
   3. GUARD      (default groq:openai/gpt-oss-safeguard-20b)          safety model that screens the client note
@@ -43,7 +43,7 @@ contains personal data beyond the client's business name; is rude or manipulativ
 SAFE (0) otherwise.
 Answer with JSON only: {"violation": 0 or 1, "reason": "<short>"}"""
 
-EXPLAIN_MODELS = "groq:openai/gpt-oss-120b,groq:openai/gpt-oss-20b"
+EXPLAIN_MODELS = "terms-desk-explainer,groq:openai/gpt-oss-120b,groq:openai/gpt-oss-20b"  # Otari routing policy first
 WRITER_MODELS = "groq:openai/gpt-oss-20b,groq:openai/gpt-oss-120b"
 GUARD_MODELS = "groq:openai/gpt-oss-safeguard-20b"
 VERIFY_MODELS = "groq:openai/gpt-oss-120b"

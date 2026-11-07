@@ -85,7 +85,12 @@ def chat(models, messages, user=None, timeout=60, **extra) -> Reply:
             continue
         msg = out["choices"][0]["message"]
         text = (msg.get("content") or "").strip()
-        served = headers.get("Otari-Model") or headers.get("otari-model") or out.get("model") or m
+        h = {k.lower(): v for k, v in headers.items()}
+        served = h.get("otari-model") or out.get("model") or m
+        if served != m and "/" not in m:            # m was an Otari routing policy name
+            served = f"policy {m} -> {served}"
+        if h.get("otari-fallback") == "true":
+            tried.append((m, "Otari routing policy fell back inside the gateway"))
         if not text:
             tried.append((m, "empty reply"))
             continue
