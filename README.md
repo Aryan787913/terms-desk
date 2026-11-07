@@ -102,7 +102,7 @@ The ML backtest (`ml/backtest.py`) needs `pip install -r requirements.txt` and t
 ## Otari: plain-English explanations (Mozilla Otari hackathon branch)
 On branch `otari`, every Skeptic decision also gets a two-sentence explanation written by an LLM
 routed through [Otari](https://otari.ai), Mozilla.ai's hosted AI gateway (OpenAI-compatible,
-`https://api.otari.ai/api/v1`). Code: `terms_desk/explain.py`, standard library only.
+`https://otari.ai/api/v1`), currently with the open-weight GPT OSS 120B served via Groq. Code: `terms_desk/explain.py`, standard library only.
 
 - **The LLM never decides.** The Skeptic has already approved or blocked; the model only explains.
 - **Grounding check.** The model gets only the numbers the Skeptic computed. Any reply with a number
@@ -111,7 +111,7 @@ routed through [Otari](https://otari.ai), Mozilla.ai's hosted AI gateway (OpenAI
 - Swap models by changing `OTARI_MODEL`; budgets and usage show up in the Otari dashboard.
 
 ```bash
-# in .env: OTARI_API_KEY=otk_...   OTARI_MODEL=<a model switched on in your Otari workspace>
+# in .env: OTARI_API_KEY=otk_...   OTARI_MODEL=groq:openai/gpt-oss-120b
 python -m terms_desk.agent explain          # no PayPal needed: 5 demo clients, Skeptic + Otari
 python -m terms_desk.agent explain --no-llm # template only
 python -m terms_desk.agent run              # the full PayPal sandbox flow now prints the explanation too

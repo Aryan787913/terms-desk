@@ -12,14 +12,14 @@ Guardrails:
 
 Otari is OpenAI-compatible. Settings (in .env):
   OTARI_API_KEY   workspace token from otari.ai -> API Keys (starts with otk_)
-  OTARI_MODEL     any model your workspace has switched on (Models tab), e.g. deepseek/deepseek-v4-pro-0813
-  OTARI_API_BASE  default https://api.otari.ai/api/v1 (EU accounts: https://eu.api.otari.ai/api/v1)
+  OTARI_MODEL     any model your workspace serves (Models tab), e.g. groq:openai/gpt-oss-120b (open-weight)
+  OTARI_API_BASE  default https://otari.ai/api/v1
 """
 from __future__ import annotations
 import json, os, re, urllib.error, urllib.request
 from dataclasses import dataclass
 
-DEFAULT_BASE = "https://api.otari.ai/api/v1"
+DEFAULT_BASE = "https://otari.ai/api/v1"
 SYSTEM = (
     "You explain an invoice-discount decision to a small-business owner. The decision is final and "
     "was made by a deterministic rule; do not change it, question it, or add advice. Write exactly two "
@@ -96,7 +96,7 @@ def call_otari(f, timeout=20):
             "messages": [{"role": "system", "content": SYSTEM},
                          {"role": "user", "content": "FACTS:\n" + json.dumps(f, indent=1)}]}
     req = urllib.request.Request(f"{base}/chat/completions", data=json.dumps(body).encode(), method="POST",
-                                 headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"})
+                                 headers={"Otari-Key": key, "Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             out = json.loads(resp.read())
